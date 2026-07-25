@@ -1,3 +1,4 @@
 .precommitNotes
 node_modules
 .env
+/prisma/generated/prisma
