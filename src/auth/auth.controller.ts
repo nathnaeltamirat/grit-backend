@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
-import { registerSchema } from './auth.schema.js';
-import { ZodError } from 'zod';
+import { loginSchema, registerSchema } from './auth.schema.js';
+import { success, ZodError } from 'zod';
 import AppError from '../types/error.js';
 import prisma from '../config/prisma.js';
 import { errorUitl } from '../utils/error.util.js';
@@ -26,14 +26,22 @@ export const registerHandler = async (
         password_hash,
       },
     });
-    const accessToken = await jwt.sign({ user_id: user.id }, envConfig.JWT_SECRET, {
-      algorithm: 'HS256',
-      expiresIn: '15m',
-    });
-    const refreshToken = await jwt.sign({ user_id: user.id }, envConfig.JWT_SECRET, {
-      algorithm: 'HS256',
-      expiresIn: '30d',
-    });
+    const accessToken = await jwt.sign(
+      { user_id: user.id },
+      envConfig.JWT_SECRET,
+      {
+        algorithm: 'HS256',
+        expiresIn: '15m',
+      },
+    );
+    const refreshToken = await jwt.sign(
+      { user_id: user.id },
+      envConfig.JWT_SECRET,
+      {
+        algorithm: 'HS256',
+        expiresIn: '30d',
+      },
+    );
     res.cookie('refreshToken', refreshToken, {
       maxAge: 1000 * 60 * 60 * 24 * 30,
       httpOnly: true,
@@ -55,6 +63,60 @@ export const registerHandler = async (
         err.issues.map((e) => e.message).join(', '),
       );
       error.status = 400;
+      return next(error);
+    }
+    return next(err);
+  }
+};
+
+export const loginHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const data = loginSchema.parse(req.body);
+    const { email, password } = data;
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) throw errorUitl('Invalid credential', 401);
+    const isValidPassword = await bcrypt.compare(password, user.password_hash);
+    if (!isValidPassword) throw errorUitl('Invalid credential', 401);
+    const accessToken = await jwt.sign(
+      { user_id: user.id },
+      envConfig.JWT_SECRET,
+      {
+        algorithm: 'HS256',
+        expiresIn: '15m',
+      },
+    );
+    const refreshToken = await jwt.sign(
+      { user_id: user.id },
+      envConfig.JWT_SECRET,
+      {
+        algorithm: 'HS256',
+        expiresIn: '30d',
+      },
+    );
+    res.cookie('refreshToken', refreshToken, {
+      maxAge: 1000 * 60 * 60 * 24 * 30,
+      httpOnly: true,
+      secure: envConfig.NODE_ENV == 'production' ? true : false,
+      sameSite: 'lax',
+    });
+    res.status(200).json({
+      success: true,
+      message: 'User Logged In Successfully',
+      data: {
+        accessToken,
+        full_name: user.full_name,
+        email,
+      },
+    });
+  } catch (err) {
+    if (err instanceof ZodError) {
+      const error: AppError = new Error(
+        err.issues.map((e) => e.message).join(', '),
+      );
       return next(error);
     }
     return next(err);
