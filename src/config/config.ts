@@ -7,8 +7,9 @@ const envSchema = z.object({
     NODE_ENV: z.string(),
     PORT: z.string(),
     DATABASE_URL:z.string(),
+    JWT_SECRET:z.string()
 
 })
 
-const env = envSchema.parse(process.env);
-export default env;
+const envConfig = envSchema.parse(process.env);
+export default envConfig;

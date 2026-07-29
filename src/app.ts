@@ -1,5 +1,7 @@
 import express from 'express';
-
+import errorMiddleware from './middlewares/error.middleware.js';
+import authRouter from './auth/auth.route.js';
+import cookieParser from 'cookie-parser';
 const app = express();
 
 app.use((req, res, next) => {
@@ -14,5 +16,7 @@ app.use((req, res, next) => {
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-
+app.use(cookieParser());
+app.use('/api/v1/auth', authRouter);
+app.use(errorMiddleware);
 export default app;
