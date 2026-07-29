@@ -32,7 +32,6 @@ npm run dev - To run the app on dev mode
 npm run lint - Eslint  
 npm run lint:fix - To fx eslint problems  
 npm run build - To build the app    
-npm run start - To start the app  
 ```
 
 
