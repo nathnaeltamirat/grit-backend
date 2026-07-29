@@ -1,13 +1,16 @@
 import { NextFunction, Request, Response } from 'express';
 import { loginSchema, registerSchema } from './auth.schema.js';
-import {ZodError } from 'zod';
+import { success, ZodError } from 'zod';
 import AppError from '../types/error.js';
 import prisma from '../config/prisma.js';
 import { errorUitl } from '../utils/error.util.js';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import jwt, { JwtPayload } from 'jsonwebtoken';
 import envConfig from '../config/config.js';
 
+interface TokenPayload extends JwtPayload {
+  userId: string;
+}
 export const registerHandler = async (
   req: Request,
   res: Response,
@@ -138,6 +141,35 @@ export const logoutHandler = async (
     return res.status(200).json({
       success: true,
       message: 'Logged out successfully',
+    });
+  } catch (err) {
+    return next(err);
+  }
+};
+
+export const refershHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const existingToken = req.cookies['refreshToken'];
+    if (!existingToken) throw errorUitl('Invalid Grant', 401);
+    const decoded = (await jwt.verify(
+      existingToken,
+      envConfig.JWT_SECRET,
+    )) as TokenPayload;
+    const userId = decoded.userId;
+    const accessToken = await jwt.sign({ userId }, envConfig.JWT_SECRET, {
+      expiresIn: '15m',
+      algorithm: 'HS256',
+    });
+    res.status(201).json({
+      success: true,
+      message: 'Access token created successfully',
+      data: {
+        accessToken,
+      },
     });
   } catch (err) {
     return next(err);
