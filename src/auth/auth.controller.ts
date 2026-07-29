@@ -117,8 +117,29 @@ export const loginHandler = async (
       const error: AppError = new Error(
         err.issues.map((e) => e.message).join(', '),
       );
+      error.status = 400;
       return next(error);
     }
+    return next(err);
+  }
+};
+
+export const logoutHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    res.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: envConfig.NODE_ENV == 'production',
+      sameSite: 'lax',
+    });
+    return res.status(200).json({
+      success: true,
+      message: 'Logged out successfully',
+    });
+  } catch (err) {
     return next(err);
   }
 };
