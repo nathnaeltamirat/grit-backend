@@ -11,3 +11,69 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+enum SEVERITY {
+  CRITICAL
+  MEDIUM
+  LOW
+}
+
+model User {
+  id            String         @id @default(cuid())
+  full_name     String
+  email         String         @unique
+  password_hash String
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @updatedAt
+  friction_logs Friction_Log[]
+  insights      Insight[]
+
+  @@map("users")
+}
+
+model Friction_Log {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  severity    SEVERITY
+  user_id     String
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  user User  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  tags Tag[] @relation("FrictionLogTags")
+
+  @@map("friction_logs")
+}
+
+model Insight {
+  id                 String   @id @default(cuid())
+  title              String
+  description        String
+  severity           SEVERITY
+  resolution_plans   String?
+  solution_landscape String
+  project_score      Float
+  focus_areas        Json
+  related_points     Json
+  start_time         DateTime
+  end_time           DateTime
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+  user_id            String
+  user               User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  tags               Tag[]    @relation("InsightTags")
+
+  @@map("insights")
+}
+
+model Tag {
+  id         String   @id @default(cuid())
+  tag_name   String   @unique
+  created_at DateTime @default(now())
+
+  friction_logs Friction_Log[] @relation("FrictionLogTags")
+  insights      Insight[]      @relation("InsightTags")
+
+  @@map("tags")
+}
