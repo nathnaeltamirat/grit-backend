@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import AppError from '../types/error.js';
 
 
-export default function ErrorMiddleware(
+export default function errorMiddleware(
   err: AppError,
   req: Request,
   res: Response,
