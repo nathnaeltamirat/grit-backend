@@ -18,7 +18,7 @@ cd grit-backend
 npm i
 npm run dev  
 npm run prisma:migrate  
-npm run generate
+npm run prisma:generate
 ```
 
 ## Environment variables
