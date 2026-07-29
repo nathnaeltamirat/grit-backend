@@ -16,7 +16,9 @@ REST API for Grit — a tool to log developer friction, tag it, and surface recu
 git clone https:/github.com/nathnaeltamirat/grit-backend.git  
 cd grit-backend
 npm i
-npm run dev
+npm run dev  
+npm run prisma:migrate  
+npm run generate
 ```
 
 ## Environment variables
@@ -31,7 +33,10 @@ NODE_ENV - state of the app development/production
 npm run dev - To run the app on dev mode  
 npm run lint - Eslint  
 npm run lint:fix - To fx eslint problems  
-npm run build - To build the app    
+npm run build - To build the app  
+npm run prisma:migrate - for database migration
+npm run prisma:generate - Generates the database ORM client and TypeScript types.
+npm run prisma:migrate - Wipes data and re-runs all migration files
 ```
 
 
