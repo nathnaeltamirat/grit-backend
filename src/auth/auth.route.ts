@@ -12,5 +12,5 @@ authRouter.post('/register', registerHandler);
 authRouter.post('/login', loginHandler);
 authRouter.post('/logout', logoutHandler);
 authRouter.post('/refresh', refershHandler);
-authRouter.post("/me",authorizeUser,meHandler)
+authRouter.get('/me', authorizeUser, meHandler);
 export default authRouter;
