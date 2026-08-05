@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { loginSchema, registerSchema } from './auth.schema.js';
-import {  ZodError } from 'zod';
+import { ZodError } from 'zod';
 import AppError from '../types/error.js';
 import prisma from '../config/prisma.js';
 import { errorUitl } from '../utils/error.util.js';
@@ -170,6 +170,28 @@ export const refershHandler = async (
       data: {
         accessToken,
       },
+    });
+  } catch (err) {
+    return next(err);
+  }
+};
+
+export const meHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.id },
+      omit: {
+        password_hash: true,
+      },
+    });
+    res.status(200).json({
+      message: 'User retrived successfully',
+      success: true,
+      data: { user },
     });
   } catch (err) {
     return next(err);
