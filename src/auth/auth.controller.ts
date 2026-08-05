@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { loginSchema, registerSchema } from './auth.schema.js';
-import { success, ZodError } from 'zod';
+import { ZodError } from 'zod';
 import AppError from '../types/error.js';
 import prisma from '../config/prisma.js';
 import { errorUitl } from '../utils/error.util.js';
