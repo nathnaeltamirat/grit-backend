@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 import errorMiddleware from './middlewares/error.middleware.js';
 import authRouter from './auth/auth.route.js';
 import cookieParser from 'cookie-parser';
@@ -32,6 +32,12 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+app.get('/health', (req: Request, res: Response, next: NextFunction) => {
+  return res.status(200).json({
+    success: true,
+    message: 'The app is live',
+  });
+});
 app.use('/api/v1/auth', authRouter);
 app.use(errorMiddleware);
 export default app;
