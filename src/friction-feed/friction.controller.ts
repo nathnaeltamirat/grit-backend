@@ -1,9 +1,10 @@
 import { NextFunction, Request, Response } from 'express';
-import { ZodError } from 'zod';
+import {  ZodError } from 'zod';
 import AppError from '../types/error.js';
 import { createFrictionSchema } from './friction.schema.js';
 import prisma from '../config/prisma.js';
 import { errorUitl } from '../utils/error.util.js';
+import { Prisma } from '../generated/prisma/client.js';
 
 export const createFrictionHandler = async (
   req: Request,
@@ -52,7 +53,56 @@ export const createFrictionHandler = async (
     return next(err);
   }
 };
-
+export const getFrictionHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  const { title, tags, page = '1' } = req.query;
+  const pageSize = 6;
+  const skip = (parseInt(page as string) - 1) * pageSize;
+  const where: Prisma.Friction_LogWhereInput = {};
+  if (title) {
+    where.title = { contains: title as string, mode: 'insensitive' };
+  }
+  if (tags) {
+    const tagList = (tags as string)
+      .split(',')
+      .map((t) => t.trim().toLowerCase());
+    where.tags = {
+      some: {
+        tag_name: {
+          in: tagList,
+        },
+      },
+    };
+  }
+  const [friction, totalCount] = await Promise.all([
+    prisma.friction_Log.findMany({
+      where,
+      skip,
+      orderBy: {
+        created_at: 'desc',
+      },
+      take: pageSize,
+      include: {
+        tags: true,
+      },
+    }),
+    prisma.friction_Log.count({ where }),
+  ]);
+  return res.status(200).json({
+    success: true,
+    message: 'Friction log retrived successfully',
+    data: friction,
+    pagination: {
+      page,
+      pageSize,
+      totalPages: Math.ceil(totalCount / pageSize),
+      totalCount,
+    },
+  });
+};
 export const deleteFrictionHandler = async (
   req: Request,
   res: Response,
