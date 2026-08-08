@@ -17,7 +17,7 @@ export const authorizeUser = async (
       throw errorUitl('Unauthorized', 401);
     }
     const authToken = authHeaders.split(' ')[1];
-    const decoded = (await jwt.verify(
+    const decoded = ( jwt.verify(
       authToken,
       envConfig.JWT_SECRET,
     )) as TokenPayload;

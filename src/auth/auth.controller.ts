@@ -29,7 +29,7 @@ export const registerHandler = async (
         password_hash,
       },
     });
-    const accessToken = await jwt.sign(
+    const accessToken =  jwt.sign(
       { user_id: user.id },
       envConfig.JWT_SECRET,
       {
@@ -37,7 +37,7 @@ export const registerHandler = async (
         expiresIn: '15m',
       },
     );
-    const refreshToken = await jwt.sign(
+    const refreshToken =  jwt.sign(
       { user_id: user.id },
       envConfig.JWT_SECRET,
       {
@@ -84,7 +84,7 @@ export const loginHandler = async (
     if (!user) throw errorUitl('Invalid credential', 401);
     const isValidPassword = await bcrypt.compare(password, user.password_hash);
     if (!isValidPassword) throw errorUitl('Invalid credential', 401);
-    const accessToken = await jwt.sign(
+    const accessToken =  jwt.sign(
       { user_id: user.id },
       envConfig.JWT_SECRET,
       {
@@ -92,7 +92,7 @@ export const loginHandler = async (
         expiresIn: '15m',
       },
     );
-    const refreshToken = await jwt.sign(
+    const refreshToken =  jwt.sign(
       { user_id: user.id },
       envConfig.JWT_SECRET,
       {
@@ -155,12 +155,12 @@ export const refershHandler = async (
   try {
     const existingToken = req.cookies['refreshToken'];
     if (!existingToken) throw errorUitl('Invalid Grant', 401);
-    const decoded = (await jwt.verify(
+    const decoded = ( jwt.verify(
       existingToken,
       envConfig.JWT_SECRET,
     )) as TokenPayload;
-    const userId = decoded.userId;
-    const accessToken = await jwt.sign({ userId }, envConfig.JWT_SECRET, {
+    const userId = decoded.user_id;
+    const accessToken =  jwt.sign({ user_id:userId }, envConfig.JWT_SECRET, {
       expiresIn: '15m',
       algorithm: 'HS256',
     });
