@@ -52,3 +52,32 @@ export const createFrictionHandler = async (
     return next(err);
   }
 };
+
+export const deleteFrictionHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const userId = req.id;
+    if (!userId) {
+      throw errorUitl('Unauthorized', 401);
+    }
+    const { id } = req.params;
+    if (!id || typeof id !== 'string') {
+      throw errorUitl('Friction id is required', 400);
+    }
+    const frictionLog = await prisma.friction_Log.deleteMany({
+      where: { user_id: userId, id },
+    });
+    if (frictionLog.count == 0) {
+      throw errorUitl('Friction not found', 404);
+    }
+    return res.status(200).json({
+      success: true,
+      message: 'Friction deleted successfully',
+    });
+  } catch (err) {
+    return next(err);
+  }
+};
