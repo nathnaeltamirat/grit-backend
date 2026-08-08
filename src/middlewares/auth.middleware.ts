@@ -22,13 +22,7 @@ export const authorizeUser = async (
       envConfig.JWT_SECRET,
     )) as TokenPayload;
     const userId = decoded.user_id;
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { id: true },
-    });
-    if (!user) {
-      throw errorUitl('Unauthorized', 401);
-    }
+  
     req.id = userId;
     next();
   } catch (err) {
