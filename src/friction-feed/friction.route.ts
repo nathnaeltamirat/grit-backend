@@ -4,9 +4,13 @@ import {
   createFrictionHandler,
   deleteFrictionHandler,
   getFrictionHandler,
+  updateFrictionHandler,
 } from './friction.controller.js';
 const frictionRouter = Router();
 frictionRouter.post('/', authorizeUser, createFrictionHandler);
-frictionRouter.delete('/:id', authorizeUser, deleteFrictionHandler);
 frictionRouter.get('/', authorizeUser, getFrictionHandler);
+
+
+frictionRouter.delete('/:id', authorizeUser, deleteFrictionHandler);
+frictionRouter.patch('/:id', authorizeUser, updateFrictionHandler);
 export default frictionRouter;
