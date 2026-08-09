@@ -1,7 +1,10 @@
 import { NextFunction, Request, Response } from 'express';
-import {  ZodError } from 'zod';
+import { success, ZodError } from 'zod';
 import AppError from '../types/error.js';
-import { createFrictionSchema } from './friction.schema.js';
+import {
+  createFrictionSchema,
+  updateFrictionSchema,
+} from './friction.schema.js';
 import prisma from '../config/prisma.js';
 import { errorUitl } from '../utils/error.util.js';
 import { Prisma } from '../generated/prisma/client.js';
@@ -51,6 +54,71 @@ export const createFrictionHandler = async (
       return next(error);
     }
     return next(err);
+  }
+};
+export const updateFrictionHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const { id } = req.params;
+    if (!id || typeof id !== 'string') {
+      throw errorUitl('Friction id is required', 400);
+    }
+    if (!req.id) {
+      throw errorUitl('Unauthorized', 401);
+    }
+    const userId = req.id;
+    const existingFriction = await prisma.friction_Log.findFirst({
+      where: {
+        user_id: userId,
+        id,
+      },
+    });
+    if (!existingFriction) {
+      return res.status(404).json({
+        success: false,
+        message: 'Friction feed not found fo rthis id',
+      });
+    }
+    const validatedData = updateFrictionSchema.parse(req.body);
+    const { tags, ...restData } = validatedData;
+    const updatedFriction = await prisma.friction_Log.update({
+      where: { id },
+      data: {
+        ...restData,
+        ...(tags && {
+          tags: {
+            set: [],
+            connectOrCreate: tags.map((tagName) => {
+              const cleanedTag = tagName.toLowerCase().trim();
+              return {
+                where: { tag_name: cleanedTag },
+                create: { tag_name: cleanedTag },
+              };
+            }),
+          },
+        }),
+      },
+      include: {
+        tags: true,
+      },
+    });
+    res.status(200).json({
+      success: true,
+      message: 'Friction log updated successfully',
+      data: updatedFriction,
+    });
+  } catch (err) {
+    if (err instanceof ZodError) {
+      const error: AppError = new Error(
+        err.issues.map((issue) => issue.message).join(', '),
+      );
+      error.status = 400;
+      return error;
+    }
+    return err;
   }
 };
 export const getFrictionHandler = async (
