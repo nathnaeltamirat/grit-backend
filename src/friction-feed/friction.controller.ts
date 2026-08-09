@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-import { success, ZodError } from 'zod';
+import { ZodError } from 'zod';
 import AppError from '../types/error.js';
 import {
   createFrictionSchema,
