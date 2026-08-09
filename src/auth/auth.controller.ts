@@ -29,22 +29,14 @@ export const registerHandler = async (
         password_hash,
       },
     });
-    const accessToken =  jwt.sign(
-      { user_id: user.id },
-      envConfig.JWT_SECRET,
-      {
-        algorithm: 'HS256',
-        expiresIn: '15m',
-      },
-    );
-    const refreshToken =  jwt.sign(
-      { user_id: user.id },
-      envConfig.JWT_SECRET,
-      {
-        algorithm: 'HS256',
-        expiresIn: '30d',
-      },
-    );
+    const accessToken = jwt.sign({ user_id: user.id }, envConfig.JWT_SECRET, {
+      algorithm: 'HS256',
+      expiresIn: '15m',
+    });
+    const refreshToken = jwt.sign({ user_id: user.id }, envConfig.JWT_SECRET, {
+      algorithm: 'HS256',
+      expiresIn: '30d',
+    });
     res.cookie('refreshToken', refreshToken, {
       maxAge: 1000 * 60 * 60 * 24 * 30,
       httpOnly: true,
@@ -84,22 +76,14 @@ export const loginHandler = async (
     if (!user) throw errorUitl('Invalid credential', 401);
     const isValidPassword = await bcrypt.compare(password, user.password_hash);
     if (!isValidPassword) throw errorUitl('Invalid credential', 401);
-    const accessToken =  jwt.sign(
-      { user_id: user.id },
-      envConfig.JWT_SECRET,
-      {
-        algorithm: 'HS256',
-        expiresIn: '15m',
-      },
-    );
-    const refreshToken =  jwt.sign(
-      { user_id: user.id },
-      envConfig.JWT_SECRET,
-      {
-        algorithm: 'HS256',
-        expiresIn: '30d',
-      },
-    );
+    const accessToken = jwt.sign({ user_id: user.id }, envConfig.JWT_SECRET, {
+      algorithm: 'HS256',
+      expiresIn: '15m',
+    });
+    const refreshToken = jwt.sign({ user_id: user.id }, envConfig.JWT_SECRET, {
+      algorithm: 'HS256',
+      expiresIn: '30d',
+    });
     res.cookie('refreshToken', refreshToken, {
       maxAge: 1000 * 60 * 60 * 24 * 30,
       httpOnly: true,
@@ -155,12 +139,20 @@ export const refershHandler = async (
   try {
     const existingToken = req.cookies['refreshToken'];
     if (!existingToken) throw errorUitl('Invalid Grant', 401);
-    const decoded = ( jwt.verify(
+    const decoded = jwt.verify(
       existingToken,
       envConfig.JWT_SECRET,
-    )) as TokenPayload;
+    ) as TokenPayload;
     const userId = decoded.user_id;
-    const accessToken =  jwt.sign({ user_id:userId }, envConfig.JWT_SECRET, {
+    const userExists = await prisma.user.count({
+      where: {
+        id: userId,
+      },
+    });
+    if (userExists == 0) {
+      throw errorUitl('Unauthorized', 401);
+    }
+    const accessToken = jwt.sign({ user_id: userId }, envConfig.JWT_SECRET, {
       expiresIn: '15m',
       algorithm: 'HS256',
     });
