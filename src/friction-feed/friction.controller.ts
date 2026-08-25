@@ -129,7 +129,10 @@ export const getFrictionHandler = async (
   const { title, tags, page = '1' } = req.query;
   const pageSize = 6;
   const skip = (parseInt(page as string) - 1) * pageSize;
-  const where: Prisma.Friction_LogWhereInput = {};
+  const userId = req.id;
+  const where: Prisma.Friction_LogWhereInput = {
+    user_id: userId,
+  };
   if (title) {
     where.title = { contains: title as string, mode: 'insensitive' };
   }
