@@ -116,9 +116,9 @@ export const updateFrictionHandler = async (
         err.issues.map((issue) => issue.message).join(', '),
       );
       error.status = 400;
-      return error;
+      return next(error);
     }
-    return err;
+    return next(err);
   }
 };
 export const getFrictionHandler = async (
