@@ -4,7 +4,7 @@ import authRouter from './auth/auth.route.js';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import frictionRouter from './friction-feed/friction.route.js';
-import settingRouter from './settings/settings.route.js';
+import settingRouter from './setting/settings.route.js';
 const app = express();
 
 app.use((req, res, next) => {

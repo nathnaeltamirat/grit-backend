@@ -1,5 +1,5 @@
 import { Router } from "express";
-import profileRouter from "./profiles/profile.route.js";
+import profileRouter from "./profile/profile.route.js";
 const settingRouter = Router();
 
 settingRouter.use('/profile',profileRouter)
