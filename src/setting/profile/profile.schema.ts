@@ -16,3 +16,9 @@ export const updateProfileSchema = z.object({
     .pipe(z.email('Invalid email'))
     .optional(),
 });
+
+export const updatePasswordSchema = z.object({
+  old_password: z.string().min(8, 'Weak password'),
+  new_password: z.string().min(8, 'Weak password'),
+  confirm_password: z.string().min(8, 'Weak password'),
+});
