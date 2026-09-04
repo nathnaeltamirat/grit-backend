@@ -1,4 +1,4 @@
-import z, { email } from 'zod';
+import z from 'zod';
 
 export const updateProfileSchema = z.object({
   full_name: z
