@@ -21,13 +21,14 @@ export const updateProfileHandler = async (
         id,
       },
     });
+    if (!user) throw errorUitl('Unauthorized', 401);
     await prisma.user.update({
       where: {
         id,
       },
       data: {
-        full_name: full_name ?? user?.full_name,
-        email: email ?? user?.email,
+        full_name: full_name ?? user.full_name,
+        email: email ?? user.email,
       },
     });
     return res.status(200).json({
