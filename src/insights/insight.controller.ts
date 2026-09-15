@@ -1,10 +1,10 @@
 import { NextFunction, Request, Response } from 'express';
 import { ZodError } from 'zod';
 import AppError from '../types/error.js';
-import { specificFrictionInsightSchema } from './insights.schema.js';
+import { specificFrictionInsightSchema } from './insight.schema.js';
 import prisma from '../config/prisma.js';
-import SpecificGemeniAIResponse, { AIInput } from '../services/gemeni.api.js';
-import AIResponse from '../services/gemeni.api.js';
+import { AIInput } from '../services/ai.api.js';
+import AIResponse from '../services/ai.api.js';
 import { errorUitl } from '../utils/error.util.js';
 
 export const specificFrictionInsightHandler = async (
@@ -14,12 +14,13 @@ export const specificFrictionInsightHandler = async (
 ) => {
   try {
     const data = specificFrictionInsightSchema.parse(req.body);
-    const { friction_id, customInstraction } = data;
+    const { friction_id, customInstraction, modelName } = data;
     const customPrompt = customInstraction
       ? `${customInstraction} \n Follow the system interaction mainly`
       : 'Follow the system interaction mainly';
     const body: AIInput = {
       data: [],
+      modelName,
       customPrompt: customPrompt,
     };
     const user = await prisma.user.findUnique({
@@ -27,9 +28,9 @@ export const specificFrictionInsightHandler = async (
         id: req.id,
       },
     });
-    // if (!user?.model_key) {
-    //   throw errorUitl('API not found', 400);
-    // }
+    if (!user?.ai_api_key) {
+      throw errorUitl('Unauthorized make sure your api key is correct', 401);
+    }
     for (const id of friction_id) {
       const friction = await prisma.friction_Log.findUnique({
         where: {
@@ -41,7 +42,8 @@ export const specificFrictionInsightHandler = async (
         description: friction?.description ?? '',
       });
     }
-    const insight = await AIResponse(body);
+
+    const insight = await AIResponse(body, user?.ai_api_key);
     return res.status(201).json({
       success: true,
       message: 'insight created successfully',
