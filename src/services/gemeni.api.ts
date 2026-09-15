@@ -1,4 +1,3 @@
-import { GoogleGenAI } from '@google/genai';
 import envConfig from '../config/config.js';
 import Groq from 'groq-sdk';
 export interface AIInput {
