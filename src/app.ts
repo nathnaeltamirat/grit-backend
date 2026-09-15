@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import frictionRouter from './friction-feed/friction.route.js';
 import insightRouter from './insights/insight.route.js';
+import settingRouter from './setting/setting.route.js';
 const app = express();
 
 app.use((req, res, next) => {
@@ -16,7 +17,10 @@ app.use((req, res, next) => {
   });
   next();
 });
-const allowedOrigins = ['http://localhost:5173','https://grit-frontend-8kk7.vercel.app'];
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://grit-frontend-8kk7.vercel.app',
+];
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -43,5 +47,7 @@ app.get('/health', (req: Request, res: Response, next: NextFunction) => {
 app.use('/api/v1/auth', authRouter);
 app.use("/api/v1/friction",frictionRouter);
 app.use("/api/v1/insights",insightRouter);
+app.use('/api/v1/friction', frictionRouter);
+app.use('/api/v1/setting', settingRouter);
 app.use(errorMiddleware);
 export default app;

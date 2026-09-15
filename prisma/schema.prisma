@@ -23,6 +23,7 @@ model User {
   full_name     String
   email         String         @unique
   password_hash String
+  ai_api_key    String?
   created_at    DateTime       @default(now())
   updated_at    DateTime       @updatedAt
   friction_logs Friction_Log[]
