@@ -1,4 +1,5 @@
 import Groq from 'groq-sdk';
+
 export interface AIInput {
   data: {
     title: string;
@@ -107,7 +108,7 @@ the other rules only and I will give you you the detail role for each interactio
     },
   ];
   const summarizedRes = await ai.chat.completions.create({
-    model: 'openai/gpt-oss-120b',
+    model:aiInput.modelName,
     messages: baseMessage,
     response_format: { type: 'json_object' },
   });
@@ -128,7 +129,7 @@ the other rules only and I will give you you the detail role for each interactio
   ];
   async function queryStep<T>(prompt: string): Promise<T> {
     const res = await ai.chat.completions.create({
-      model: 'openai/gpt-oss-120b',
+      model:aiInput.modelName,
       messages: [...chatHistory, { role: 'developer', content: prompt }],
       response_format: { type: 'json_object' },
     });
