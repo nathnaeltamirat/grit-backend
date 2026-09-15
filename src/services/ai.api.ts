@@ -80,7 +80,7 @@ the other rules only and I will give you you the detail role for each interactio
     if you are unclear with producing json or text stick with json
    Go through the chat and don't do research since the previous request did enough research. I want you to give me 1-3 suggested focus area, where each  has a length of at most 10–20 characters.
    Don't output anything else, you must responde strictily in JSON fromat as an array of string like this: {"suggestedFocusArea": ["focus area","focus area2"]} `;
-  const toolingAssesment = `You have the previous chat history.
+  const toolingAssessment = `You have the previous chat history.
    Go through the chat and don't do research since the previous request did enough research.
     I want you to give me table but since I am using it for my frontend I want you to give me in the json format with this output guidline
     1. The heading  are Alternative Platform, Key Features, Missing Capabilites,  The "GAP".
@@ -152,18 +152,18 @@ the other rules only and I will give you you the detail role for each interactio
     suggestedFocusArea: string[];
   }>(suggestedFocusArea);
   console.log('suggested Focus Area: ', suggestedFocusAreaOutput);
-  const toolingAssesmentOutput = await queryStep<{
-    toolingAssesment: ToolingMatrix;
-  }>(toolingAssesment);
+  const toolingAssessmentOutput = await queryStep<{
+    toolingAssessment: ToolingMatrix;
+  }>(toolingAssessment);
   console.log('Tooling Assesment:');
-  console.dir(toolingAssesmentOutput, { depth: null });
+  console.dir(toolingAssessmentOutput, { depth: null });
   const combinedOutput = {
     summary: summaryOutput?.summary,
     painPoints: painPointsOutput.painPoints,
     resoultionPlan: resoultionPlanOutput.resolutionPlan,
     score: projectScoreOutput.score,
     suggestedFocusArea: suggestedFocusAreaOutput.suggestedFocusArea,
-    toolingAssesment: toolingAssesmentOutput.toolingAssesment,
+    toolingAssessment: toolingAssessmentOutput.toolingAssessment,
   };
   const validator = `.
 
