@@ -29,7 +29,7 @@ export const specificFrictionInsightHandler = async (
       },
     });
     if (!user?.ai_api_key) {
-      throw errorUitl('Unauthorized make sure your api key is correct', 401);
+      throw errorUitl('Unauthorized make sure your api key is configured', 401);
     }
     for (const id of friction_id) {
       const friction = await prisma.friction_Log.findUnique({
