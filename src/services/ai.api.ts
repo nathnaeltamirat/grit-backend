@@ -1,4 +1,3 @@
-import envConfig from '../config/config.js';
 import Groq from 'groq-sdk';
 export interface AIInput {
   data: {
@@ -6,13 +5,15 @@ export interface AIInput {
     description: string;
   }[];
   customPrompt?: string;
+  modelName: 'openai/gpt-oss-120b' | 'qwen/qwen3.8-27b' | 'openai/gpt-oss-20b';
 }
 interface ToolingMatrix {
   headers: string[];
   data: string[][];
 }
-const ai = new Groq({ apiKey: envConfig.GROK_API_KEY });
-export default async function AIResponse(aiInput: AIInput) {
+
+export default async function AIResponse(aiInput: AIInput, apiKey: string) {
+  const ai = new Groq({ apiKey });
   const GeneralInstraction = `
         Project Context:
         Most inefficiency doesn't come from one big problem. It comes from small annoyances you never write down and forget about by tomorrow.
@@ -113,7 +114,7 @@ the other rules only and I will give you you the detail role for each interactio
 
   const rawSummary = summarizedRes.choices[0].message.content || '{}';
   const summaryOutput = JSON.parse(rawSummary);
-  console.log('Summarized: ',summaryOutput);
+  console.log('Summarized: ', summaryOutput);
   const chatHistory: Groq.Chat.Completions.ChatCompletionMessageParam[] = [
     {
       role: 'system',
