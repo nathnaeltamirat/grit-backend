@@ -3,6 +3,7 @@ import { authorizeUser } from '../middlewares/auth.middleware.js';
 import {
   specificFrictionInsightHandler,
   timeRangeFrictionInsightHandler,
+  updateInsightHandler,
 } from './insight.controller.js';
 const insightRouter = Router();
 
@@ -13,4 +14,5 @@ insightRouter.post(
   timeRangeFrictionInsightHandler,
 );
 
+insightRouter.patch('/:id', authorizeUser, updateInsightHandler);
 export default insightRouter;
