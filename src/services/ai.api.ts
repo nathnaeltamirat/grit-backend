@@ -1,3 +1,4 @@
+import { InputJsonValue } from '@prisma/client/runtime/client';
 import Groq from 'groq-sdk';
 
 export interface AIInput {
@@ -11,9 +12,11 @@ export interface AIInput {
 interface ToolingMatrix {
   headers: string[];
   data: string[][];
+  [key: string]: InputJsonValue;
 }
 
 export default async function AIResponse(aiInput: AIInput, apiKey: string) {
+  const randNumber = Math.floor(Math.random() * 2000);
   const ai = new Groq({ apiKey });
   const GeneralInstraction = `
         Project Context:
@@ -61,6 +64,7 @@ the other rules only and I will give you you the detail role for each interactio
         strictly in json format like{"summary": "summary description"}
 
     `;
+  const title = `Now you have the summarized res above I want you to give me a title at most 3 words make it accurate and related to the summarized res`;
   const painPoints = `You have the previous chat history.
     if you are unclear with producing json or text stick with json
    Go through the chat and don't do  research since the previous request did enough research. I want you to give me 3 repeated PAIN points only, where each pain point has a length of at most 20-30 characters.
@@ -84,7 +88,7 @@ the other rules only and I will give you you the detail role for each interactio
    Go through the chat and don't do research since the previous request did enough research.
     I want you to give me table but since I am using it for my frontend I want you to give me in the json format with this output guidline
     1. The heading  are Alternative Platform, Key Features, Missing Capabilites,  The "GAP".
-   {"toolingAssesment":{
+   {"toolingAssessment":{
     "headers":["Alternative Platform", "Key Features", "Missing Capabilites","The GAP"],
     "data":[
         ["Jenkins / CircleCI","Pipeline orchestration, wide plugin ecosystem", "No developer-sentiment correlation","Friction Awareness"],
@@ -107,15 +111,36 @@ the other rules only and I will give you you the detail role for each interactio
       content: `${aiInput.customPrompt} \nData: ${JSON.stringify(aiInput.data)}`,
     },
   ];
+
   const summarizedRes = await ai.chat.completions.create({
-    model:aiInput.modelName,
+    model: aiInput.modelName,
     messages: baseMessage,
     response_format: { type: 'json_object' },
   });
 
   const rawSummary = summarizedRes.choices[0].message.content || '{}';
   const summaryOutput = JSON.parse(rawSummary);
-  console.log('Summarized: ', summaryOutput);
+  const titleMessage: Groq.Chat.Completions.ChatCompletionMessageParam[] = [
+    {
+      role: 'system',
+      content: `${systemInstruction}`,
+    },
+    { role: 'developer', content: `${summarizedRes}` },
+
+    {
+      role: 'user',
+      content: `${aiInput.customPrompt} \nData: ${JSON.stringify(aiInput.data)}`,
+    },
+    {
+      role: 'developer',
+      content: title,
+    },
+  ];
+  const titleRes = await ai.chat.completions.create({
+    model: aiInput.modelName,
+    messages: titleMessage,
+  });
+  const outputTitleRes = titleRes.choices[0].message.content;
   const chatHistory: Groq.Chat.Completions.ChatCompletionMessageParam[] = [
     {
       role: 'system',
@@ -129,7 +154,7 @@ the other rules only and I will give you you the detail role for each interactio
   ];
   async function queryStep<T>(prompt: string): Promise<T> {
     const res = await ai.chat.completions.create({
-      model:aiInput.modelName,
+      model: aiInput.modelName,
       messages: [...chatHistory, { role: 'developer', content: prompt }],
       response_format: { type: 'json_object' },
     });
@@ -140,24 +165,23 @@ the other rules only and I will give you you the detail role for each interactio
   const painPointsOutput = await queryStep<{ painPoints: string[] }>(
     painPoints,
   );
-  console.log('Pain points: ', painPointsOutput);
+ 
   const resoultionPlanOutput = await queryStep<{ resolutionPlan: string[] }>(
     resoultionPlan,
   );
-  console.log('Resolution Plan: ', resoultionPlanOutput);
+
 
   const projectScoreOutput = await queryStep<{ score: number }>(projectScore);
-  console.log('Project score: ', projectScoreOutput);
+
   const suggestedFocusAreaOutput = await queryStep<{
     suggestedFocusArea: string[];
   }>(suggestedFocusArea);
-  console.log('suggested Focus Area: ', suggestedFocusAreaOutput);
   const toolingAssessmentOutput = await queryStep<{
     toolingAssessment: ToolingMatrix;
   }>(toolingAssessment);
-  console.log('Tooling Assesment:');
-  console.dir(toolingAssessmentOutput, { depth: null });
+
   const combinedOutput = {
+    title: outputTitleRes ?? `Insight-${randNumber}`,
     summary: summaryOutput?.summary,
     painPoints: painPointsOutput.painPoints,
     resoultionPlan: resoultionPlanOutput.resolutionPlan,
@@ -165,19 +189,26 @@ the other rules only and I will give you you the detail role for each interactio
     suggestedFocusArea: suggestedFocusAreaOutput.suggestedFocusArea,
     toolingAssessment: toolingAssessmentOutput.toolingAssessment,
   };
-  const validator = `.
-
-    Review the original user data and entire generated analysis payload below  context
-    and determine whether the analysis  is accurate , consistent with the user data, and structurally valid.
-
-    Generated Payload
-    ${JSON.stringify(combinedOutput)}
-
-    Respond strictly in json format: {"validity": true}  or {"validity":false}`;
+  const validator = `You are the final validation step for an AI-generated project analysis.
+   Your job is to validate the GENERATED PAYLOAD against: 1. The ORIGINAL USER DATA.
+    2. The SUMMARY generated during the initial research stage.
+     3. The requirements and constraints specified in the analysis prompts. 
+     ORIGINAL USER DATA: ${JSON.stringify(aiInput.data)} 
+     GENERATED PAYLOAD: ${JSON.stringify(combinedOutput)}
+      Validate the payload using the following rules: 
+      1. STRUCTURE - The payload must contain: title summary painPoints resoultionPlan score suggestedFocusArea toolingAssessment 
+      2. TITLE - Must be a non-empty string. - Should be related to the generated summary. - Should be at most 3 words. - Must not introduce an unrelated topic.
+       3. SUMMARY - Must describe the problem represented by the original user data. - Must be reasonably consistent with the original data. - Must not claim facts that are clearly contradicted by the original data. 
+       4. PAIN POINTS - Must be an array of strings. - Must contain exactly 3 pain points. - Each pain point should represent a recurring problem or friction found in the original data. - Each pain point should be approximately 20–30 characters. - They must not be unrelated or invented problems.
+        5. RESOLUTION PLAN - Must be an array of strings. - Must contain between 5 and 7 resolution steps. - The steps must address the identified pain points. - The steps should be practical and relevant to the original data. 
+        6. SCORE - Must be a number from 0 to 100. - The score should represent the feasibility/opportunity of building a custom solution based on the recurring friction and existing solution gaps. - It must not be outside the range 0–100.
+         7. SUGGESTED FOCUS AREAS - Must be an array of 1–3 strings. - Each focus area should be approximately 10–20 characters. - They must be relevant to the identified problem. 
+         8. TOOLING ASSESSMENT - Must contain: headers data - headers must contain exactly these four concepts: "Alternative Platform" "Key Features" "Missing Capabilities" "The GAP" - data must be an array of rows. - Every row must contain exactly 4 values. - The alternatives must be relevant to the problem. - The assessment must not contradict the original data. 
+         9. CONSISTENCY - All generated fields must describe the same underlying problem. - Pain points, resolution plans, focus areas, score, and tooling assessment must be consistent with the summary. - Do not approve content simply because it is valid JSON. - Reject the payload if the AI invented a substantially different problem from the original user data. 
+         IMPORTANT: - Do not perform new external research. - Judge the generated analysis only against the supplied original data and the requirements above. - Minor wording differences are acceptable. - Return false if any important requirement is violated. Return ONLY valid JSON: {"validity": true} or {"validity": false} `;
   const validityOutput = await queryStep<{
     validity: boolean;
   }>(validator);
-  console.log('Validity: ', validityOutput);
   if (validityOutput.validity) {
     return combinedOutput;
   } else {
