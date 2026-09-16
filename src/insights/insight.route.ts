@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { authorizeUser } from '../middlewares/auth.middleware.js';
 import {
+  deleteInsightHandler,
   specificFrictionInsightHandler,
   timeRangeFrictionInsightHandler,
   updateInsightHandler,
@@ -15,4 +16,5 @@ insightRouter.post(
 );
 
 insightRouter.patch('/:id', authorizeUser, updateInsightHandler);
+insightRouter.delete('/:id', authorizeUser, deleteInsightHandler);
 export default insightRouter;
