@@ -21,3 +21,9 @@ export const timeRangeFrictionInsightSchema = z.object({
     },
   ),
 });
+export const updateInsightSchema = z.object({
+  title:z.string().optional(),
+  description: z.string().optional(),
+  resolution_plans: z.string().optional(),
+  tags: z.array(z.string().min(1, "Tag can't be empty")).optional(),
+});
