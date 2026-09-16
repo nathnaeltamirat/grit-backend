@@ -243,3 +243,68 @@ export const timeRangeFrictionInsightHandler = async (
     return next(err);
   }
 };
+export const updateInsightHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const { id } = req.params;
+    if (!id || typeof id !== 'string') {
+      throw errorUitl('Insight id is required', 400);
+    }
+    if (!req.id) {
+      throw errorUitl('Unauthorized', 401);
+    }
+    const userId = req.id;
+    const existingInsight = await prisma.insight.findFirst({
+      where: {
+        user_id: userId,
+        id,
+      },
+    });
+    if (!existingInsight) {
+      return res.status(404).json({
+        success: false,
+        message: 'Insight not found whith this id',
+      });
+    }
+    const validatedData = updateInsightSchema.parse(req.body);
+    const { tags, ...restData } = validatedData;
+    const updatedInsight = await prisma.insight.update({
+      where: { id },
+      data: {
+        ...restData,
+        ...(tags && {
+          tags: {
+            set: [],
+            connectOrCreate: tags.map((tagName) => {
+              const cleanedTag = tagName.toLowerCase().trim();
+              return {
+                where: { tag_name: cleanedTag },
+                create: { tag_name: cleanedTag },
+              };
+            }),
+          },
+        }),
+      },
+      include: {
+        tags: true,
+      },
+    });
+    res.status(200).json({
+      success: true,
+      message: 'Insight updated successfully',
+      data: updatedInsight,
+    });
+  } catch (err) {
+    if (err instanceof ZodError) {
+      const error: AppError = new Error(
+        err.issues.map((issue) => issue.message).join(', '),
+      );
+      error.status = 400;
+      return next(error);
+    }
+    return next(err);
+  }
+};
