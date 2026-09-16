@@ -308,3 +308,32 @@ export const updateInsightHandler = async (
     return next(err);
   }
 };
+
+export const deleteInsightHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const userId = req.id;
+    if (!userId) {
+      throw errorUitl('Unauthorized', 401);
+    }
+    const { id } = req.params;
+    if (!id || typeof id !== 'string') {
+      throw errorUitl('Inisght id is required', 400);
+    }
+    const insight = await prisma.insight.deleteMany({
+      where: { user_id: userId, id },
+    });
+    if (insight.count == 0) {
+      throw errorUitl('Insight not found', 404);
+    }
+    return res.status(200).json({
+      success: true,
+      message: 'Insight deleted successfully',
+    });
+  } catch (err) {
+    return next(err);
+  }
+};
