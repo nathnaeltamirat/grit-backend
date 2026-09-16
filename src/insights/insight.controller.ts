@@ -73,12 +73,17 @@ export const specificFrictionInsightHandler = async (
 
     let start: Date | undefined;
     let end: Date | undefined;
+    const tagsId = new Set<string>();
     for (const id of friction_id) {
       const friction = await prisma.friction_Log.findUnique({
         where: {
           id,
         },
+        include: {
+          tags: true,
+        },
       });
+
       if (!friction) {
         throw errorUitl('Friction not found', 404);
       }
@@ -87,6 +92,9 @@ export const specificFrictionInsightHandler = async (
       }
       if (!end || end > friction.created_at) {
         end = friction.created_at;
+      }
+      for (const tag of friction.tags) {
+        tagsId.add(tag.id);
       }
       severitys.push(friction.severity);
       body.data.push({
@@ -112,6 +120,12 @@ export const specificFrictionInsightHandler = async (
         focus_areas: insight.suggestedFocusArea,
         pain_points: insight.painPoints,
         resolution_plans: insight.resoultionPlan,
+        tags: {
+          connect: [...tagsId].map((id) => ({ id })),
+        },
+      },
+      include: {
+        tags: true,
       },
     });
     return res.status(201).json({
@@ -165,7 +179,12 @@ export const timeRangeFrictionInsightHandler = async (
           lt: end,
         },
       },
+      include: {
+        tags: true,
+      },
     });
+    const tagIds = new Set<string>();
+
     const api_key = jwt.verify(
       user.ai_api_key,
       envConfig.JWT_SECRET,
@@ -173,6 +192,9 @@ export const timeRangeFrictionInsightHandler = async (
     const severitys: SEVERITY[] = [];
     for (const friction of frictions) {
       severitys.push(friction.severity);
+      for (const tag of friction.tags) {
+        tagIds.add(tag.id);
+      }
       body.data.push({
         title: friction?.title ?? '',
         description: friction?.description ?? '',
@@ -184,6 +206,7 @@ export const timeRangeFrictionInsightHandler = async (
     const newInsight = await prisma.insight.create({
       data: {
         title: insight.title,
+
         project_score: insight.score,
         description: insight.summary,
         severity: commonSeverity,
@@ -194,6 +217,14 @@ export const timeRangeFrictionInsightHandler = async (
         focus_areas: insight.suggestedFocusArea,
         pain_points: insight.painPoints,
         resolution_plans: insight.resoultionPlan,
+        tags: {
+          connect: [...tagIds].map((id) => ({
+            id,
+          })),
+        },
+      },
+      include: {
+        tags: true,
       },
     });
     return res.status(201).json({
@@ -212,4 +243,3 @@ export const timeRangeFrictionInsightHandler = async (
     return next(err);
   }
 };
-
