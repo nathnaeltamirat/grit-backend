@@ -345,62 +345,66 @@ export const getInsightHandler = async (
   res: Response,
   next: NextFunction,
 ) => {
-  const { title, tags, page = '1', pageSize = 6, time = 'all' } = req.query;
-  const size = parseInt(pageSize as string);
-  const skip = (parseInt(page as string) - 1) * size;
-  const userId = req.id;
-  const date = {
-    '30d': new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-    '90d': new Date(Date.now() - 90 * 24 * 60 * 60 * 1000),
-    '7d': new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-    '24h': new Date(Date.now() - 24 * 60 * 60 * 1000),
-  };
-  const where: Prisma.InsightWhereInput = {
-    user_id: userId,
-  };
-  if (title) {
-    where.title = { contains: title as string, mode: 'insensitive' };
-  }
-  if (tags) {
-    const tagList = (tags as string)
-      .split(',')
-      .map((t) => t.trim().toLowerCase());
-    where.tags = {
-      some: {
-        tag_name: {
-          in: tagList,
+  try {
+    const { title, tags, page = '1', pageSize = 6, time = 'all' } = req.query;
+    const size = parseInt(pageSize as string);
+    const skip = (parseInt(page as string) - 1) * size;
+    const userId = req.id;
+    const date = {
+      '30d': new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+      '90d': new Date(Date.now() - 90 * 24 * 60 * 60 * 1000),
+      '7d': new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+      '24h': new Date(Date.now() - 24 * 60 * 60 * 1000),
+    };
+    const where: Prisma.InsightWhereInput = {
+      user_id: userId,
+    };
+    if (title) {
+      where.title = { contains: title as string, mode: 'insensitive' };
+    }
+    if (tags) {
+      const tagList = (tags as string)
+        .split(',')
+        .map((t) => t.trim().toLowerCase());
+      where.tags = {
+        some: {
+          tag_name: {
+            in: tagList,
+          },
         },
+      };
+    }
+    if (time != 'all' && typeof time === 'string' && time in date) {
+      where.created_at = {
+        gte: date[time as TimeFilter],
+      };
+    }
+    const [insight, totalCount] = await Promise.all([
+      prisma.insight.findMany({
+        where,
+        skip,
+        orderBy: {
+          created_at: 'desc',
+        },
+        take: size,
+        include: {
+          tags: true,
+        },
+      }),
+      prisma.insight.count({ where }),
+    ]);
+    return res.status(200).json({
+      success: true,
+      message: 'Insight log retrived successfully',
+      data: insight,
+      pagination: {
+        page,
+        pageSize,
+        totalPages: Math.ceil(totalCount / size),
+        totalCount,
       },
-    };
+    });
+  } catch (err) {
+    return next(err);
   }
-  if (time != 'all' && typeof time === 'string' && time in date) {
-    where.created_at = {
-      gte: date[time as TimeFilter],
-    };
-  }
-  const [insight, totalCount] = await Promise.all([
-    prisma.insight.findMany({
-      where,
-      skip,
-      orderBy: {
-        created_at: 'desc',
-      },
-      take: size,
-      include: {
-        tags: true,
-      },
-    }),
-    prisma.insight.count({ where }),
-  ]);
-  return res.status(200).json({
-    success: true,
-    message: 'Insight log retrived successfully',
-    data: insight,
-    pagination: {
-      page,
-      pageSize,
-      totalPages: Math.ceil(totalCount / size),
-      totalCount,
-    },
-  });
 };
