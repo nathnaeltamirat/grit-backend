@@ -8,7 +8,6 @@ const envSchema = z.object({
   PORT: z.string(),
   DATABASE_URL: z.string(),
   JWT_SECRET: z.string(),
-  GROK_API_KEY: z.string(),
 });
 
 const envConfig = envSchema.parse(process.env);
