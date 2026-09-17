@@ -45,7 +45,7 @@ npm run prisma:migrate - Wipes data and re-runs all migration files
 - [x] Auth
 - [x] Friction Feed
 - [x] Settings
-- [ ] Insights
+- [X] Insights
 - [ ] Initial beta release (v1.0.0-beta)
 - [ ] Initial release (v1.0.0)
 - [ ] Forgot password/reset flow
