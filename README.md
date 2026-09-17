@@ -3,7 +3,7 @@ REST API for Grit — a tool to log developer friction, tag it, and surface recu
 
 
 
-**Version:** 0.5.0
+**Version:** 0.8.0
 
 ## STACK 
 - Node.js / Express
@@ -45,7 +45,8 @@ npm run prisma:migrate - Wipes data and re-runs all migration files
 - [x] Auth
 - [x] Friction Feed
 - [x] Settings
-- [ ] Insights
+- [X] Insights
+- [ ] Testing
 - [ ] Initial beta release (v1.0.0-beta)
 - [ ] Initial release (v1.0.0)
 - [ ] Forgot password/reset flow

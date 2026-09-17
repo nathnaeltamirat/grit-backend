@@ -4,6 +4,7 @@ import authRouter from './auth/auth.route.js';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import frictionRouter from './friction-feed/friction.route.js';
+import insightRouter from './insights/insight.route.js';
 import settingRouter from './setting/setting.route.js';
 const app = express();
 
@@ -44,6 +45,8 @@ app.get('/health', (req: Request, res: Response, next: NextFunction) => {
   });
 });
 app.use('/api/v1/auth', authRouter);
+app.use("/api/v1/friction",frictionRouter);
+app.use("/api/v1/insights",insightRouter);
 app.use('/api/v1/friction', frictionRouter);
 app.use('/api/v1/setting', settingRouter);
 app.use(errorMiddleware);
